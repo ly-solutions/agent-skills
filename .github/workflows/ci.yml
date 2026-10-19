@@ -1,0 +1,33 @@
+name: ci
+on:
+  push:
+    branches: [main]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Manifests are valid JSON with the required fields
+        run: |
+          python3 - <<'PY'
+          import json, pathlib, sys
+          m = json.load(open('.claude-plugin/marketplace.json'))
+          assert m['name'] and m['plugins'], 'marketplace needs a name and plugins'
+          for p in m['plugins']:
+              assert p['name'] and p['source'], p
+              if isinstance(p['source'], str):
+                  d = pathlib.Path(p['source'])
+                  pj = json.load(open(d / '.claude-plugin' / 'plugin.json'))
+                  assert pj['name'] == p['name'], (pj['name'], p['name'])
+                  skills = list(d.glob('skills/*/SKILL.md'))
+                  assert skills, f'{d} has no skills'
+                  for s in skills:
+                      head = s.read_text().split('---')[1]
+                      assert 'name:' in head and 'description:' in head, s
+          print('ok')
+          PY
+      - name: Shell scripts pass shellcheck
+        run: find plugins -path '*/scripts/*' -type f -exec shellcheck {} +

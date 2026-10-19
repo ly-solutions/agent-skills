@@ -1,0 +1,31 @@
+{
+  "name": "ly-solutions",
+  "owner": { "name": "Ly Solutions", "url": "https://github.com/ly-solutions" },
+  "metadata": { "description": "Skills and hooks for coding agents from Ly Solutions." },
+  "plugins": [
+    {
+      "name": "boards",
+      "source": "./plugins/boards",
+      "description": "Read, draw and edit Excalidraw whiteboards as text on a boards server.",
+      "homepage": "https://github.com/ly-solutions/boards",
+      "license": "Apache-2.0",
+      "keywords": ["whiteboard", "excalidraw", "diagrams"]
+    },
+    {
+      "name": "artifacts",
+      "source": { "source": "github", "repo": "ly-solutions/artifacts" },
+      "description": "Find, publish, version and share documents in an artifacts catalog.",
+      "homepage": "https://github.com/ly-solutions/artifacts",
+      "license": "Apache-2.0",
+      "keywords": ["documents", "catalog"]
+    },
+    {
+      "name": "agent-guard",
+      "source": { "source": "github", "repo": "ly-solutions/agent-guard" },
+      "description": "Safety hooks: refuse the destructive command, hand the agent the safe one.",
+      "homepage": "https://github.com/ly-solutions/agent-guard",
+      "license": "Apache-2.0",
+      "keywords": ["hooks", "safety"]
+    }
+  ]
+}
