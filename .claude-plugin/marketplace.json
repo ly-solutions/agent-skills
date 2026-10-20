@@ -4,6 +4,14 @@
   "metadata": { "description": "Skills and hooks for coding agents from Ly Solutions." },
   "plugins": [
     {
+      "name": "harnessly",
+      "source": "./plugins/harnessly",
+      "description": "Work in a harnessly workspace: show documents, boards and files in the person's right pane, hand tasks to another agent in a new tab.",
+      "homepage": "https://github.com/ly-solutions/harnessly",
+      "license": "Apache-2.0",
+      "keywords": ["workspace", "tabs", "agents"]
+    },
+    {
       "name": "boards",
       "source": "./plugins/boards",
       "description": "Read, draw and edit Excalidraw whiteboards as text on a boards server.",

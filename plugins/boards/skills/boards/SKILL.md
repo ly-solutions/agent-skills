@@ -13,7 +13,8 @@ Setup (environment): `BOARDS_URL` — the server origin, e.g. `https://boards.ex
 API token (needed to list and create boards, and to edit boards that are not open for editing by link). A board
 link alone is enough to read it.
 
-The helper `scripts/boards` (bash + curl) wraps the API; plain `curl` works the same way (shown below).
+The helper `scripts/boards` (bash + curl, next to this file) wraps the API; where it is installed on the `PATH` as
+`boards` (harnessly does that), call it by that name. Plain `curl` works the same way (shown below).
 
 ## Read a board
 
