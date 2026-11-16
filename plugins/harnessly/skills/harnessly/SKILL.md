@@ -1,6 +1,6 @@
 ---
 name: harnessly
-description: Work inside a harnessly workspace — show a document, board, file, dev server or merge request to the person in the right pane of the conversation, list the workspace's tabs, and start, brief and read another agent in a new tab (Claude Code or Codex) with the `harnessly` command. Use when you run in a harnessly tab (the `harnessly` command exists and `TMUX` is set) and the person should see something you made, asks to "open", "show me" or "put it on the side", or when a task is worth handing to a parallel agent ("ask another agent to review", "run this in a separate tab", "check what the other tab did").
+description: Work inside a harnessly workspace — show a document, board, file, dev server or merge request to the person in the right pane of the conversation, draw a mockup or a working prototype as a Sinopia Design board («сделай макет», «прототип», «чтобы кнопки работали»), make a widget under the chat's right column («сделай виджет, который показывает…»), change how harnessly looks — a theme, colours, a background of the chats, an animated one («сделай тему как ночной Токио», «поставь на эту папку матрицу»), list the workspace's tabs, and start, brief and read another agent in a new tab (Claude Code or Codex) with the `harnessly` command. Use when you run in a harnessly tab (the `harnessly` command exists and `TMUX` is set) and the person should see something you made, asks to "open", "show me" or "put it on the side", or when a task is worth handing to a parallel agent ("ask another agent to review", "run this in a separate tab", "check what the other tab did").
 ---
 
 # harnessly
@@ -44,7 +44,62 @@ harnessly open https://gitlab.example.com/g/p/-/merge_requests/12 # a merge requ
 - `harnessly panel show` brings the pane out if the person hid it. `harnessly status` tells you what it shows and
   what you already asked for today; read it before opening the same thing again.
 
+A turn that made many things (several documents, a batch of tasks, merge requests, screenshots) opens one, the one to
+look at first, or none: the chat already shows what the turn made as cards under your answer. Name the rest as links;
+never open tasks or merge requests one by one. The pane itself opens at most three quiet tabs in ten minutes.
+
 In your reply, still name the link or path in words: the pane is a convenience, the reply is the record.
+
+## Widgets under the right column
+
+On a computer the person keeps small cards under the chat's right column. Built-in ones (Лимиты, Машина, Подчаты,
+Выкат, Заметка, Часы) they add themselves from «+ Виджет». When they ask for a widget that shows something else, make
+it — the MCP tool `widget_create` or the command, one core behind both:
+
+```bash
+harnessly widget create limits-forecast --title "Прогноз лимитов" --sources limits \
+  --smart "Хватит ли лимита до конца дня? Одной строкой." --every 30
+harnessly widget create load --title "Нагрузка" --sources machine --refresh 60      # only draws the data
+harnessly widget create pomodoro --title "Помидор" --html @w.html --css @w.css --js @w.js   # your own page
+harnessly widget update limits-forecast --every 15      # only what is given changes
+harnessly widget list --side
+harnessly widget remove --side limits-forecast
+```
+
+- `--sources`: the host's data the widget gets (`limits`, `machine`, `subagents`); `--smart`: a request a model
+  answers over them in a few short lines, every `--every` minutes (5 at least) and at once on the card's button.
+- Your own page is sandboxed: `hl.context.data` is `{sources, smart}`, `hl.on('context', fn)` brings new data; no
+  network, no secrets, no chats, no script in the markup (put it in `--js`).
+- It joins the person's widgets by itself on every computer; say it is there, under the right column.
+- Moving an app in the left menu («перенеси Доски в основные кнопки») is the person's: they carry it by hand in the menu
+  or in Настройки → Оформление → «Меню слева».
+
+## The look of harnessly
+
+A theme, colours, a background of the chats (a gradient, a picture, an animated scene: matrix, stars, aurora, rain,
+synthwave, snow…), grain, a font or the look of the bubbles and the field are data the person's page applies, never
+CSS or code you write. Change it in that turn with the MCP tool `theme_set` (`mcp__harnessly__theme_set` in Claude
+Code) or the command:
+
+```bash
+harnessly theme presets                                   # the ready looks: matrix, stars, aurora, tokyo…
+harnessly theme preset tokyo --why "тема как ночной Токио"                     # every chat
+harnessly theme preset matrix --scope folder --why "матрица на эту папку"      # this chat's folder
+harnessly theme preset stars --scope chat --why "звёзды в этом чате"           # this chat only
+harnessly theme set '{"v":1,"mode":"dark","hues":[{"h":320,"s":80}],"intensity":70,"bg":{"kind":"scene","scene":"rain"},"grain":10,"dim":20,"blur":0,"parts":{}}' --why "…"
+harnessly theme reset --scope chat --why "…"              # the chat inherits again
+```
+
+A live effect over the chat («живая тема»: snow that settles on the field and the messages and is swept by the
+mouse, a night lamp that lights up while the agent works, a laser that burns in a new answer) is the look's `fx`:
+`"fx":{"preset":"snowplay|nightlamp|laser","power":0-100}` (`harnessly theme fx-presets`). When none fits, write the
+effect's code: a script on the page's sandbox SDK `hx` (docs/looks.md, «Живые эффекты»), sent with
+`harnessly theme set '<look>' --fx-file effect.js` (or `fx_code` of `theme_set`); it runs in a sandboxed frame with no
+network and sees only the pointer, the blocks' boxes and the agent's state.
+
+A chat wears its own look, else its folder's, else the one for all. The page shows «Применено · Отменить»; the answer
+is `applied`, or `waiting` when no page of the person is open (it applies when they open harnessly within 10 minutes). `harnessly theme` alone
+prints every field of a look.
 
 ## Work with other tabs
 
@@ -73,11 +128,60 @@ harnessly tab close <tab id>
   the file you asked it to write. Do not wait in a tight loop; do your own work in between.
 - Tell the person which tabs you started and what each is doing. Close the ones you no longer need.
 
+### A team of delegated chats
+
+The chats you delegate (the `delegate_task` tool of the `harnessly` MCP server) work as a team:
+
+- **Task list.** For a pool of parts with explicit dependencies, `task_add` (`after` for the order, `check` for a
+  command that must pass); chats take them with `task_claim` without an id and get the next by themselves. When each
+  part has its own chat, just delegate and wait: it is cheaper.
+- **Lean start.** A delegated chat starts without the person's memory index and their plugins that only bring MCP
+  servers and skills; give it what it needs in the prompt, or `full_context: true` when it needs those.
+- **Waiting.** `wait_conversation` with id `all` waits for every delegated chat in one call: cheaper than a wait per chat.
+- **Messages mid-turn.** A delegated chat writes to its parent (`send_to_conversation`, id `parent`) and to the chats
+  beside it (`list_children` names them); the message reaches them at their next step. Messages are paced: no back
+  and forth.
+- **Broadcast.** `broadcast_children` tells every chat at work at once. With `deliver: now` it is a stop: each running
+  turn is interrupted (its running command too) and the message is read at once. A free chat gets it with its next
+  turn, unless `wake: true` starts it.
+- **Coordinator.** When the person asks this chat only to coordinate, call `coordinate_mode` (`on: true`): edits,
+  builds and test suites here are refused, and the work goes to delegated chats.
+
 ## Boards and documents
 
 Make a diagram with the `boards` skill and publish a write-up with the `artifacts` skill; both print links. Then
 `harnessly open` them. Every document you publish records this conversation, so the pane can list the
 documents of the conversation.
+
+## Mockups and prototypes
+
+A mockup, a prototype or a screen the person asks for («сделай макет», «прототип», «чтобы кнопки работали», steps,
+states) is a board of Sinopia Design, from any chat and folder. Boards run their logic, so buttons, steps and states
+work, and the pane shows them:
+
+```bash
+harnessly design new "Аукцион" --page "Мастер ставки"   # prints the board file and the format's rules
+# write the screen into the board: markup in <x-dc>, logic in a DCLogic class, steps/states as data-props
+harnessly design panel <project> show --board "<file>"
+```
+
+A screen by a screenshot or a mockup on a UI kit installed on the machine is a board too: find the kit with the
+`kit_list`, `kit_index`, `kit_search`, `kit_component`, `kit_tokens` tools, start with
+`harnessly design new "<title>" --kit <id>`, use the kit's real components (`<x-import component-from-global-scope=…>`,
+as `kit_component` gives them), and make the scenes (a sheet, a transition, a toast) `data-props` switches and `DCLogic`
+handlers.
+
+A NEW design made from scratch (before `harnessly design new`): if the person did not name a UI kit and the conversation does
+not make clear which one to use, first ask in the chat which installed kit to take (`kit_list`), offering «без кита» as the
+last option (`notice_ask`, or AskUserQuestion where that agent has it, else one short question). Wait for the answer, then
+`harnessly design new "<title>" --kit <id>` (no `--kit` for «без кита»). Do not ask when the kit is named or clear, for an
+existing project (edits, a new page of it), or when no kit is installed. The Sinopia panel has no button for it: the chat is
+the only place a kit is chosen.
+
+Do not write a separate HTML file, build a separate app or start `python3 -m http.server` or another localhost server to
+show a mockup. Code is for when the person asks for an app or the product's code; even then offer the board as the
+prototype first and ask. If you still work outside Sinopia Design, the first line of the answer says why and asks
+«Сделать то же доской Sinopia?». An ```html block in the chat runs no scripts: keep it for a short static sketch.
 
 ## Checks on a shared machine
 
