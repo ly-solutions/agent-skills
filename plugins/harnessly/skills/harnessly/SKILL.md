@@ -100,7 +100,7 @@ than about five minutes, offer a progress widget under the right column. Never f
    with the real progress (never a figure you do not have); the last update says «Готово» / "Done" or what failed. No, or
    no answer: nothing, and not again for this job.
 4. Write the answer into the note at once (`type: feedback` in its front matter, a line in MEMORY.md). It is the person's
-   file: what they correct there wins. Codex writes no note: its memories are built from its chats by themselves.
+   file: what they correct there wins. Codex does not edit its memory files: it adds the line as an update note in the ad_hoc notes folder of its memory.
 
 ## The look of harnessly
 
