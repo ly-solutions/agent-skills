@@ -71,8 +71,36 @@ harnessly widget remove --side limits-forecast
 - Your own page is sandboxed: `hl.context.data` is `{sources, smart}`, `hl.on('context', fn)` brings new data; no
   network, no secrets, no chats, no script in the markup (put it in `--js`).
 - It joins the person's widgets by itself on every computer; say it is there, under the right column.
+- `--scope chat` (the default) shows the widget in the chat you made it in only; the person pins it to other chats, or to
+  every chat, from the card's menu. `--scope global` is for what is theirs in every chat (the limits, the machine's load).
+- A widget for a job goes when the job is done: «Готово» / "Done" in it, tell the person, then
+  `harnessly widget remove --side <name>` on your next turn there (or leave it: the person dismisses it from its menu).
+- `harnessly widget update <name> --html @card.html` changes the card where it stands (no reload, no blink), so a progress
+  bar may be updated every 10-30 seconds from a background loop.
 - Moving an app in the left menu («перенеси Доски в основные кнопки») is the person's: they carry it by hand in the menu
   or in Настройки → Оформление → «Меню слева».
+
+### A progress widget for long work: offer it yourself
+
+When a job of many minutes is about to start or run in the background (a render, a build, a deploy, a download, a
+migration, a long script) and the person wants to hear when it ends («скажи, когда закончится», «сколько осталось»,
+"tell me when it finishes", "let me know when it's done", "how long is left"), or you start work that clearly takes more
+than about five minutes, offer a progress widget under the right column. Never for a job of a minute or two.
+
+1. **First**, in the same turn and before the job starts, read your memory note `side-widget-offers.md` (your memory folder;
+   in Codex, your memories), even when it is probably not there. One line per answer:
+   `date | kind | length | yes / no / asked` (kind: render, build, deploy, download, migration, training, other; length:
+   short 5-15 min, long over 15; a line of the kind `any` is a standing rule).
+2. Decide by it. They asked for a widget themselves: make it, record `asked`. `asked`, or two `yes` and no `no` for this
+   kind and length: make it at once, say so in one line, ask nothing. The last answer is `no`: stay quiet, make nothing,
+   offer nothing. No answer yet, one `yes`, or mixed: offer once.
+3. Offer with `notice_ask` (kind `choice`, `timeoutSec` 120), not in your text, in the person's language:
+   «Сделать виджет прогресса справа?» — «Сделать виджет справа» / «Не надо»; or "Add a progress widget on the right?" —
+   "Add the widget" / "No thanks". Yes: `widget_create render-progress --title … --html @card.html`, then `widget_update`
+   with the real progress (never a figure you do not have); the last update says «Готово» / "Done" or what failed. No, or
+   no answer: nothing, and not again for this job.
+4. Write the answer into the note at once (`type: feedback` in its front matter, a line in MEMORY.md). It is the person's
+   file: what they correct there wins. Codex writes no note: its memories are built from its chats by themselves.
 
 ## The look of harnessly
 
