@@ -1,6 +1,6 @@
 ---
 name: harnessly
-description: Work inside a harnessly workspace — show a document, board, file, dev server or merge request to the person in the right pane of the conversation, draw a mockup or a working prototype as a Sinopia Design board («сделай макет», «прототип», «чтобы кнопки работали»), make a widget under the chat's right column («сделай виджет, который показывает…»), change how harnessly looks — a theme, colours, a background of the chats, an animated one («сделай тему как ночной Токио», «поставь на эту папку матрицу»), list the workspace's tabs, and start, brief and read another agent in a new tab (Claude Code or Codex) with the `harnessly` command. Use when you run in a harnessly tab (the `harnessly` command exists and `TMUX` is set) and the person should see something you made, asks to "open", "show me" or "put it on the side", or when a task is worth handing to a parallel agent ("ask another agent to review", "run this in a separate tab", "check what the other tab did").
+description: Work inside a harnessly workspace — show a document, board, file, dev server or merge request to the person in the right pane of the conversation, draw a mockup or a working prototype as a Sinopia Design board («сделай макет», «прототип», «чтобы кнопки работали»), make a widget under the chat's right column («сделай виджет, который показывает…»), make a routine — a task the hub runs again and again on a schedule and reports («каждый понедельник присылай аналитику», «каждое утро дайджест в файл», «следи за выкатом»), change how harnessly looks — a theme, colours, a background of the chats, an animated one («сделай тему как ночной Токио», «поставь на эту папку матрицу»), list the workspace's tabs, and start, brief and read another agent in a new tab (Claude Code or Codex) with the `harnessly` command. Use when you run in a harnessly tab (the `harnessly` command exists and `TMUX` is set) and the person should see something you made, asks to "open", "show me" or "put it on the side", or when a task is worth handing to a parallel agent ("ask another agent to review", "run this in a separate tab", "check what the other tab did").
 ---
 
 # harnessly
@@ -101,6 +101,35 @@ than about five minutes, offer a progress widget under the right column. Never f
    no answer: nothing, and not again for this job.
 4. Write the answer into the note at once (`type: feedback` in its front matter, a line in MEMORY.md). It is the person's
    file: what they correct there wins. Codex does not edit its memory files: it adds the line as an update note in the ad_hoc notes folder of its memory.
+
+## Routines: what should happen again and again
+
+When the person wants something done on a schedule — «каждый понедельник присылай аналитику», «каждое утро дайджест
+в файл», «следи за выкатом и пиши, если упал», "check my limits every evening" — or once at a later time («25-го в
+12:00 убери флаг»), make a **routine**: the hub runs it on one of the person's machines in a new chat, with no one
+watching, checks the result and tells them. Never a cron job, `/loop` or `CronCreate` of your own: those die with
+this session.
+
+```bash
+harnessly routine create --name "Дайджест дня" --cron "0 9 * * 1-5" --words "по будням в 9:00" \
+  --prompt "Собери, что изменилось за сутки в моих задачах и MR. Разделы: Итог, Ждут меня, Риски." \
+  --to notice,telegram,file --file digest/{date}.md --check contains:Риски --check file --check fresh
+harnessly routine list                    # on|paused, schedule, next start, last runs (+ ok, . quiet, x failed)
+harnessly routine set ID --when failure   # only tell when it fails; pause|resume|run|runs|forget|delete ID
+```
+
+The same as MCP tools: `routine_create`, `routine_update`, `routine_list`, `routine_run`, `routine_runs`, `routine_delete`.
+
+- The prompt is the whole brief for the run's agent, which does not see this chat: what to gather and from where,
+  what the result looks like, what counts as «nothing new» (then the run is quiet and the person is not disturbed).
+- The schedule is cron in the person's zone (`--tz`, Europe/Moscow by default) plus their own words (`--words`).
+- Checks are deterministic and done by the hub: `contains:TEXT`, `regex:EXPR`, `artifact[:KIND]`, `file`, `fresh`.
+  A run that fails one is a failed run; three failed runs in a row pause the routine with one notice.
+- Channels besides the run's chat: `notice` (the bell, the default), `telegram`, `messenger`, `mail`, `file` (a new
+  version of `--file` every run), `doc`. `--when changed|always|failure|never` says when the person hears.
+- `--autonomy read` (default) only gathers; `draft` prepares MRs and drafts; `act` changes things but never merges,
+  deploys or writes to people.
+- Say back in one line what you made: the name, the schedule in words, the next start, where the result goes.
 
 ## The look of harnessly
 
